@@ -95,6 +95,26 @@ const userSchema = new mongoose.Schema(
       enum: ['Busy', 'In OPD', 'In Surgery', 'In Vacation', 'Available for Call or Online Consultation Only', "Don't disturb"],
     },
 
+
+    /* -------------------------
+    Document Upload + ONE Verification Status
+ -------------------------- */
+    documents: {
+      governmentId: { type: String },        // file path
+      medicalCertificate: { type: String },  // file path
+      degreeCertificate: { type: String },   // file path
+    },
+
+    // One master status
+    documentVerification: {
+      type: String,
+      enum: ["pending", "approved", "rejected", null],
+      default: null,
+    },
+
+    // If rejected, store admin message
+    documentRejectReason: { type: String },
+
   },
   { timestamps: true }
 );

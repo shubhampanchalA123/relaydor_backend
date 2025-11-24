@@ -11,6 +11,7 @@ import http from "http";
 import { Server as SocketIOServer } from "socket.io";
 import authRoutes from "./routes/authRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
+import patientRoutes from "./routes/patientRoutes.js";
 
 
 // Load ENV
@@ -62,6 +63,8 @@ app.get("/", (req, res) => {
 // Register routes
 app.use("/api/auth", authRoutes);
 app.use("/api/doctor", doctorRoutes);
+app.use("/api/patients", patientRoutes);
+
 
 // 404 Handler (IMPORTANT: MUST BE AFTER ROUTES)
 app.use((req, res) => {

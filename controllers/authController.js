@@ -201,7 +201,9 @@ const login = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        userRole: user.userRole
+        userRole: user.userRole,
+        verified: user.verified, 
+        documentVerification: user.documentVerification
       },
     });
 
@@ -466,7 +468,6 @@ const resendMobileOTP = async (req, res, next) => {
     next(error);
   }
 };
-
 
 
 const forgotPassword = async (req, res, next) => {
