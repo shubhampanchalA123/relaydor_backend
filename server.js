@@ -12,7 +12,7 @@ import { Server as SocketIOServer } from "socket.io";
 import authRoutes from "./routes/authRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
-
+import adminRoutes from "./routes/adminRoutes.js";
 
 // Load ENV
 dotenv.config();
@@ -53,6 +53,9 @@ app.use(
   })
 );
 
+// Serve static files from public directory
+app.use(express.static('public'));
+
 // Health check
 app.get("/", (req, res) => {
   res.json({ success: true, message: "API Running 🚀" });
@@ -65,6 +68,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/doctor", doctorRoutes);
 app.use("/api/patients", patientRoutes);
 
+
+
+
+// admin routes can be added here
+app.use("/api/admin", adminRoutes);
 
 // 404 Handler (IMPORTANT: MUST BE AFTER ROUTES)
 app.use((req, res) => {

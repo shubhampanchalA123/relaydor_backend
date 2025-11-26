@@ -41,6 +41,16 @@ const userSchema = new mongoose.Schema(
     },
 
     /* -------------------------
+    profile image upload
+ -------------------------- */
+
+    profileImage: {
+      type: String,
+      default: null,
+    },
+
+
+    /* -------------------------
        Verification Flags
     -------------------------- */
     emailVerified: {

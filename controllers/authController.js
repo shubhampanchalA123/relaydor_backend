@@ -2,6 +2,7 @@ import User from "../models/UserModel.js";
 import { generateOtp } from "../utils/otpGenerator.js";
 import sendEmail from "../utils/sendEmail.js";
 import sendSMS from "../utils/sendSMS.js";
+import path from "path";
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -27,7 +28,10 @@ const registerUser = async (req, res) => {
     }
 
     // 1️⃣ Check existing user
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({
+      $or: [{ email }, { mobile }]
+    });
+
 
     if (existingUser) {
 
@@ -140,6 +144,7 @@ const login = async (req, res, next) => {
   try {
     const { email, password, userRole } = req.body;
 
+    console.log("Login attempt:", email, userRole, password);
     if (!email || !password || !userRole) {
       return res.status(400).json({
         success: false,
@@ -151,7 +156,7 @@ const login = async (req, res, next) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid credentials",
+        message: "user is not exist with this email",
       });
     }
 
@@ -202,7 +207,7 @@ const login = async (req, res, next) => {
         name: user.name,
         email: user.email,
         userRole: user.userRole,
-        verified: user.verified, 
+        verified: user.verified,
         documentVerification: user.documentVerification
       },
     });
@@ -595,4 +600,115 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-export { registerUser, login, verifyEmailOTP, verifyMobileOTP, getProfile, updateProfile, resendEmailOTP, resendMobileOTP, forgotPassword, resetPassword };
+
+// uplpad profie image controller
+
+const uploadProfileImage = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "profileImage is required.",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profileImage: path.relative('public', req.file.path) },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile image uploaded successfully.",
+      profileImage: updatedUser.profileImage,
+    });
+
+  } catch (error) {
+    console.log("PROFILE IMAGE UPLOAD ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+
+
+
+
+// doctor upload their documents for verification
+
+// ======================================================
+// 📌 DOCTOR DOCUMENT UPLOAD
+// ======================================================
+const uploadDocuments = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // 1️⃣ Check verification status
+    if (user.documentVerification === "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Your previous documents are still pending review. Please wait for admin approval."
+      });
+    }
+
+    if (user.documentVerification === "approved") {
+      return res.status(400).json({
+        success: false,
+        message: "Your documents are already approved. No need to upload again."
+      });
+    }
+
+    // 2️⃣ Ensure all files are provided
+    if (!req.files) {
+      return res.status(400).json({
+        success: false,
+        message: "Request must be multipart/form-data",
+      });
+    }
+    const { governmentId, medicalCertificate, degreeCertificate } = req.files;
+    if (!governmentId || !medicalCertificate || !degreeCertificate) {
+      return res.status(400).json({
+        success: false,
+        message: "All 3 documents are required: governmentId, medicalCertificate, degreeCertificate",
+      });
+    }
+
+    // 3️⃣ Update documents + reset verification status if rejected
+    user.documents = {
+      governmentId: path.relative('public', governmentId[0].path),
+      medicalCertificate: path.relative('public', medicalCertificate[0].path),
+      degreeCertificate: path.relative('public', degreeCertificate[0].path),
+    };
+    user.documentVerification = "pending"; // Reset status
+    user.documentRejectReason = ""; // Clear previous reject reason
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Documents uploaded successfully. Waiting for admin approval.",
+      user,
+    });
+
+  } catch (error) {
+    console.log("DOCUMENT UPLOAD ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+
+
+export { registerUser, login, verifyEmailOTP, verifyMobileOTP, getProfile, updateProfile, resendEmailOTP, resendMobileOTP, forgotPassword, resetPassword,uploadDocuments,uploadProfileImage };

@@ -6,7 +6,7 @@ import {
   updatePatient,
   deletePatient
 } from "../controllers/PatientController.js";
-import roleAuthMiddleware from "../middlewares/roleAuthMiddleware.js"; // renamed middleware
+import protect from "../middlewares/roleAuthMiddleware.js"; 
 
 const router = express.Router();
 
@@ -15,18 +15,18 @@ const router = express.Router();
 // ------------------------------
 
 // Add new patient
-router.post("/", roleAuthMiddleware(["doctor"]), addPatient);
+router.post("/", protect(["doctor"]), addPatient);
 
 // Get all patients of logged-in doctor
-router.get("/", roleAuthMiddleware(["doctor"]), getMyPatients);
+router.get("/", protect(["doctor"]), getMyPatients);
 
 // Get single patient by ID
-router.get("/:id", roleAuthMiddleware(["doctor"]), getPatientById);
+router.get("/:id", protect(["doctor"]), getPatientById);
 
 // Update patient
-router.put("/:id", roleAuthMiddleware(["doctor"]), updatePatient);
+router.put("/:id", protect(["doctor"]), updatePatient);
 
 // Delete patient
-router.delete("/:id", roleAuthMiddleware(["doctor"]), deletePatient);
+router.delete("/:id", protect(["doctor"]), deletePatient);
 
 export default router;
